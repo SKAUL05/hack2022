@@ -44,7 +44,8 @@ class Onboarding extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.COLORS.WHITE
+    backgroundColor: theme.COLORS.WHITE,
+    flex:1
   },
   padded: {
     paddingHorizontal: theme.SIZES.BASE * 2,
@@ -75,7 +76,7 @@ const styles = StyleSheet.create({
     resizeMode: 'stretch', // or 'stretch'
     width: 400,
     height: 400,
-    marginTop: 200
+    marginTop: 100
   }
 });
 

@@ -14,6 +14,7 @@ function CustomDrawerContent({ drawerPosition, navigation, profile, focused, sta
   const insets = useSafeArea();
   const screens = [
     "Home", 
+    "Camera",
     "Profile",
     "Account",
     "Elements",

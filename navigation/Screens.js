@@ -15,6 +15,7 @@ import Profile from "../screens/Profile";
 import Register from "../screens/Register";
 import Elements from "../screens/Elements";
 import Articles from "../screens/Articles";
+import Cameras from "../screens/Camera";
 // drawer
 import CustomDrawerContent from "./Menu";
 
@@ -139,14 +140,14 @@ function ProfileStack(props) {
 
 function HomeStack(props) {
   return (
-    <Stack.Navigator headerMode="screen">
+    <Stack.Navigator screenOptions={{headerMode: 'screen', headerShown: true}}>
       <Stack.Screen
-        name="Home"
+        name="Homes"
         component={Home}
         options={{
           header: ({ navigation, scene }) => (
             <Header
-              title="Home"
+              title="Homes"
               search
               options
               navigation={navigation}
@@ -178,20 +179,64 @@ function HomeStack(props) {
   );
 }
 
-export default function OnboardingStack(props) {
+function CameraStack(props) {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{headerMode: 'screen', headerShown: false}}>
       <Stack.Screen
-        name="ICAN"
-        component={Onboarding}
-        option={{
-          headerTransparent: true,
-          headerShown: false,
-          presentation: 'card',
-          headerMode: 'screen'
+        name="Cameras"
+        component={Cameras}
+        options={{
+          header: ({ navigation, scene }) => (
+            <Header
+              title="Cameras"
+              search
+              options
+              navigation={navigation}
+              scene={scene}
+            />
+          )
         }}
       />
-      <Stack.Screen name="App" component={AppStack} />
+      <Stack.Screen
+        name="Pro"
+        component={Pro}
+        options={{
+          header: ({ navigation, scene }) => (
+            <Header
+              title=""
+              back
+              white
+              transparent
+              navigation={navigation}
+              scene={scene}
+            />
+          ),
+          headerTransparent: true
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+
+
+
+
+export default function OnboardingStack(props) {
+  return (
+    <Stack.Navigator screenOptions={{headerMode: 'screen', headerShown: true}}>
+      <Stack.Screen
+        name="."
+        component={Onboarding}
+        option={{
+          headerTransparent: false,
+          headerShown: false,
+          presentation: 'card',
+        }}
+      />
+      <Stack.Screen name="App" component={AppStack} option={{
+          headerShown: false,
+        }}/>
     </Stack.Navigator>
   );
 }
@@ -228,6 +273,7 @@ function AppStack(props) {
       initialRouteName="Home"
     >
       <Drawer.Screen name="Home" component={HomeStack} />
+      <Drawer.Screen name="Camera" component={CameraStack} />
       <Drawer.Screen name="Profile" component={ProfileStack} />
       <Drawer.Screen name="Account" component={Register} />
       <Drawer.Screen name="Elements" component={ElementsStack} />

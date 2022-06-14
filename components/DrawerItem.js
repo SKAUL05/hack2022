@@ -19,6 +19,15 @@ class DrawerItem extends React.Component {
             color={focused ? "white" : argonTheme.COLORS.PRIMARY}
           />
         );
+      case "Camera":
+        return (
+          <Icon
+            name="shop"
+            family="ArgonExtra"
+            size={14}
+            color={focused ? "white" : argonTheme.COLORS.PRIMARY}
+          />
+        );
       case "Elements":
         return (
           <Icon
