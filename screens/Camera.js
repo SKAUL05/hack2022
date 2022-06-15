@@ -8,6 +8,10 @@ import { cameraWithTensors, bundleResourceIO } from "@tensorflow/tfjs-react-nati
 import * as tf from "@tensorflow/tfjs";
 import * as handpose from '@tensorflow-models/handpose';
 import * as fp from "fingerpose"
+import * as Speech from 'expo-speech';
+import * as facemesh from "@tensorflow-models/face-landmarks-detection";
+
+
 import Handsigns from "../handsigns"
 
 
@@ -80,7 +84,25 @@ class Cameras extends React.Component {
       useModel: {},
       model: null,
       count: 0,
-      guess: ''
+      guess: '',
+      lastguess: '',
+      flow : {
+        balance: {
+          name : "Balance",
+          visited : false,
+          voice : "Your account balance is 65800 EURO."
+        },
+        payment : {
+          name: "Payment",
+          visited: false,
+          voice : "Initializing transfer of 1200 EURO to Tony Stark for gadget payments,  are you sure?"
+        },
+        gadgetPayment : {
+          name: "Gadget",
+          visited: false,
+          voice: "Please wait, You have already paid 2000 EURO to Tony Stark this month for gadgets, do you still want to proceed ahead?"
+        }
+      }
     };
   }
 
@@ -209,6 +231,45 @@ class Cameras extends React.Component {
     }
   }
 
+  speakGuess(guess) {
+      console.log(guess);
+      if (guess.name == "Balance" && !guess.visited){
+    
+        setTimeout(()=>{
+          Speech.speak("Fetching account details", { 
+            voice: 'com.apple.ttsbundle.siri_female_en-GB_compact', onDone : () => {
+          }});
+        },2000);
+        setTimeout(()=>{
+          Speech.speak(guess.voice, { 
+            voice: 'com.apple.ttsbundle.siri_female_en-GB_compact', onDone : () => {
+          }});
+        },3000);   
+    }
+    else if (guess.name == "Payment" && !guess.visited) {
+      this.state.flow.payment.visited = true;
+      setTimeout(()=>{
+        Speech.speak("Analysing payment details", { 
+          voice: 'com.apple.ttsbundle.siri_female_en-GB_compact', onDone : () => {
+        }});
+      },2000);
+      setTimeout(()=>{
+        Speech.speak(guess.voice, { 
+          voice: 'com.apple.ttsbundle.siri_female_en-GB_compact', onDone : () => {
+        }});
+      },3000);   
+    }
+    else if (guess.name == "Gadget" && !guess.visited) {
+      this.state.flow.gadgetPayment.visited = true;
+      setTimeout(()=>{
+        Speech.speak(guess.voice, { 
+          voice: 'com.apple.ttsbundle.siri_female_en-GB_compact', onDone : () => {
+        }});
+      },3000);   
+    }
+    
+  
+  }
 
   render() {
     let textureDims;
@@ -223,6 +284,29 @@ class Cameras extends React.Component {
         width: 1600,
       };
     }
+    if (this.state.guess == "B"){
+      this.speakGuess(this.state.flow.balance);
+      this.state.flow.balance.visited = true;
+      this.state.guess = "Account Details";
+      this.state.lastguess = "Account Details";
+    }
+    else if (this.state.guess == "D"){
+      this.speakGuess(this.state.flow.payment);
+      this.state.flow.payment.visited = true;
+      this.state.guess = "Payment";
+      this.state.lastguess = "Payment";
+    }
+    else if (this.state.guess == "R"){
+      this.speakGuess(this.state.flow.gadgetPayment);
+      this.state.flow.gadgetPayment.visited = true;
+      this.state.guess = "Initiating Transfers";
+      this.state.lastguess = "Initiating Transfers";
+    }
+    else {
+      this.state.guess = this.state.lastguess;
+    }
+    console.log("Guess Here: ", this.state.guess);
+
 
     return (
       <View>
