@@ -9,10 +9,10 @@ import * as tf from "@tensorflow/tfjs";
 import * as handpose from '@tensorflow-models/handpose';
 import * as fp from "fingerpose"
 import * as Speech from 'expo-speech';
-import * as facemesh from "@tensorflow-models/face-landmarks-detection";
+import * as facemesh from "@tensorflow-models/face-detection";
 
-
-import Handsigns from "../handsigns"
+import Handsigns from "../handsigns";
+import {drawMesh} from "../components/Utilities";
 
 
 //import * as mobilenet from "@tensorflow-models/mobilenet";
@@ -62,7 +62,9 @@ const styles = StyleSheet.create({
   },
   text:{
     textAlign:'center',
-    marginTop: 2
+    marginTop: 3,
+    textShadowColor: 'grey',
+    textShadowOffset:{width: 5, height: 5},
   },
   canvas:{
           position:'absolute',
@@ -83,6 +85,8 @@ class Cameras extends React.Component {
       isModelReady: false,
       useModel: {},
       model: null,
+      net: null,
+      faceCheck: true,
       count: 0,
       guess: '',
       lastguess: '',
@@ -101,6 +105,11 @@ class Cameras extends React.Component {
           name: "Gadget",
           visited: false,
           voice: "Please wait, You have already paid 2000 EURO to Tony Stark this month for gadgets, do you still want to proceed ahead?"
+        },
+        login : {
+          name: "Login",
+          visited: false,
+          voice: "Welcome Alex! I am Nikki, your banking partner. Your safety is my priority. How can I help you today?"
         }
       }
     };
@@ -117,7 +126,8 @@ class Cameras extends React.Component {
     // this.setState({cameraPermission: status === 'granted'});
     console.log("Start Loading Model");
     const model = await handpose.load();
-    this.setState({ isModelReady: true, model });
+    const net = await facemesh.createDetector(facemesh.SupportedModels.MediaPipeFaceDetector,{runtime:'tfjs'});
+    this.setState({ isModelReady: true, model, net});
     console.log("Model Loaded");
   }
 
@@ -133,11 +143,14 @@ class Cameras extends React.Component {
           this.canvasRef.current.width = width;
           this.canvasRef.current.height = height;
           const predictions = await this.state.model.estimateHands(nextImageTensor);
+          const face = await this.state.net.estimateFaces(nextImageTensor);
+          // console.log(face);
           this.setState({predictions})
           if (predictions.length > 0) {
             //loading the fingerpose model
             const GE = new fp.GestureEstimator([
               fp.Gestures.ThumbsUpGesture,
+              // fp.Gestures.VictoryGesture,
               Handsigns.aSign,
               Handsigns.bSign,
               Handsigns.cSign,
@@ -173,7 +186,7 @@ class Cameras extends React.Component {
             )
             // console.log("Max:",maxConfidence);
             if (estimatedGestures.gestures.length > 0 && maxConfidence >=0 ){
-              console.log("Guess:",estimatedGestures.gestures[maxConfidence].name);
+              console.log("Actual Guess:",estimatedGestures.gestures[maxConfidence].name);
               this.state.guess = estimatedGestures.gestures[maxConfidence].name;
             }
           }
@@ -182,6 +195,11 @@ class Cameras extends React.Component {
           }
 
           const ctx = this.canvasRef.current.getContext("2d");
+          if (this.state.count < 40){
+            drawMesh(face, ctx);
+            this.state.guess = "Login";
+            
+          }
           // requestAnimationFrame(loop);
           this.drawHand(predictions, ctx);
           this.state.count +=1;
@@ -205,12 +223,12 @@ class Cameras extends React.Component {
             // Draw path
             context.beginPath();
             context.moveTo(
-              landmarks[firstJointIndex][0],
-              landmarks[firstJointIndex][1]
+              landmarks[firstJointIndex][0]*1.55,
+              landmarks[firstJointIndex][1]*2
             );
             context.lineTo(
-              landmarks[secondJointIndex][0],
-              landmarks[secondJointIndex][1]
+              landmarks[secondJointIndex][0]*1.55,
+              landmarks[secondJointIndex][1]*2
             );
             context.strokeStyle = "plum";
             context.lineWidth = 4;
@@ -220,8 +238,8 @@ class Cameras extends React.Component {
   
         // Loop through landmarks and draw em
         for (let i = 0; i < landmarks.length; i++) {
-          const x = landmarks[i][0];
-          const y = landmarks[i][1];
+          const x = landmarks[i][0]*1.55 ;
+          const y = landmarks[i][1]*2;
           context.beginPath();
           context.arc(x, y, 5, 0, 3 * Math.PI);
           context.fillStyle = 'blue';
@@ -232,7 +250,7 @@ class Cameras extends React.Component {
   }
 
   speakGuess(guess) {
-      console.log(guess);
+      // console.log(guess);
       if (guess.name == "Balance" && !guess.visited){
     
         setTimeout(()=>{
@@ -267,8 +285,20 @@ class Cameras extends React.Component {
         }});
       },3000);   
     }
-    
-  
+    else if (guess.name == "Login" && !guess.visited) {
+      this.state.flow.login.visited = true;
+      setTimeout(()=>{
+        Speech.speak("Analysing your face for login, ", { 
+          voice: 'com.apple.ttsbundle.siri_female_en-GB_compact', onDone : () => {
+        }});
+      },2000);
+
+      setTimeout(()=>{
+        this.state.lastguess = "Welcome Alex!";
+        Speech.speak(guess.voice, { 
+          voice: 'com.apple.ttsbundle.siri_female_en-GB_compact'});
+      },7000);
+    }
   }
 
   render() {
@@ -301,6 +331,10 @@ class Cameras extends React.Component {
       this.state.flow.gadgetPayment.visited = true;
       this.state.guess = "Initiating Transfers";
       this.state.lastguess = "Initiating Transfers";
+    }
+    else if (this.state.guess == "Login"){
+      this.speakGuess(this.state.flow.login);
+      this.state.flow.login.visited = true;
     }
     else {
       this.state.guess = this.state.lastguess;
